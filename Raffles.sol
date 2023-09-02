@@ -11,24 +11,46 @@ contract RifaNFT is ERC721URIStorage, Ownable {
 
     IERC20 public usdt; // Contrato del token USDT
     uint256 public nextTokenId = 1;
-    uint256 public precio = 2 * 10**6; // Precio del NFT en USDT (asumiendo que USDT tiene 6 decimales)
+    uint256 public precio = 1; // Precio del NFT en wei
 
-    constructor(address _usdt) ERC721("RifaNFT", "RNFT") {
-        usdt = IERC20(_usdt);
+    constructor(address _usdtAddress) ERC721("RifaNFT", "RNFT") {
+        usdt = IERC20(_usdtAddress);
     }
 
-    // Función para acuñar NFT
-    function mintNFT(string memory uri) external onlyOwner {
+   // Función para acuñar NFT
+    function crearBoleta(string memory uri) external onlyOwner {
         _mint(address(this), nextTokenId);
         _setTokenURI(nextTokenId, uri);
         nextTokenId = nextTokenId.add(1);
     }
 
     // Función para comprar NFT
-    function comprarNFT(uint256 tokenId) external {
-        //require(_exists(tokenId), "NFT no existe");
-        //require(usdt.transferFrom(msg.sender, owner(), precio), "Fallo en la transferencia de USDT");
+    function transferirBoleta(uint256 tokenId) external payable {
+        _transfer(address(this), msg.sender, tokenId);
+    }
+
+  // Función para depositar USDT en el contrato
+    function transferirUSDT(uint256 amount) public  {
+        require(
+            usdt.transferFrom(msg.sender, address(this), amount),
+            "Transferencia de USDT fallida"
+        );
+    }
+
+    // Función para retirar USDT del contrato
+    function retirarUSDT(uint256 amount) public {
+        require(usdt.transfer(msg.sender, amount), "Retirada de USDT fallida");
+    }
+  
+    // Función para comprar NFT
+    function comprarBoleta(uint256 tokenId) external payable {
+
+        transferirUSDT(precio * 1e6);
 
         _transfer(address(this), msg.sender, tokenId);
     }
+
+  
+
+   
 }
